@@ -1,0 +1,77 @@
+#include <Arduino.h>
+#include <driver/ledc.h>
+
+// Definición de variables y botones
+const int B3 = 2; // (B3) CAMBIAR VARIABLE EN FÍSICO A 33
+const int B4 = 5; // (B4) CAMBIAR VARIABLE EN FÍSICO A 26
+
+// Pins para control de LEDs
+const int RED = 15;   // Pin para el LED rojo
+const int GREEN = 18; // Pin para el LED verde
+const int BLUE = 13;  // Pin para el LED azul
+
+// PWM canales para los LEDs
+const int redChannel = 0;
+const int greenChannel = 1;
+const int blueChannel = 2;
+
+int selectedColor = redChannel; // Rojo como color inicial
+int brightness = 0; // Valor de brillo inicial
+
+void setup() {
+  pinMode(B3, INPUT_PULLUP);
+  pinMode(B4, INPUT_PULLUP);
+
+  pinMode(RED, OUTPUT);
+  pinMode(GREEN, OUTPUT);
+  pinMode(BLUE, OUTPUT);
+
+  ledcSetup(redChannel, 5000, 8);   // 5 kHz frequency, 8-bit resolution
+  ledcSetup(greenChannel, 5000, 8); // 5 kHz frequency, 8-bit resolution
+  ledcSetup(blueChannel, 5000, 8);  // 5 kHz frequency, 8-bit resolution
+
+  ledcAttachPin(RED, redChannel);
+  ledcAttachPin(GREEN, greenChannel);
+  ledcAttachPin(BLUE, blueChannel);
+
+  // Inicialización de LEDs para estar fuera de estado
+  ledcWrite(redChannel, 0);
+  ledcWrite(greenChannel, 0);
+  ledcWrite(blueChannel, 0);
+}
+
+void loop() {
+  if (digitalRead(B3) == LOW) {
+    // B3 presionado, cambiar al siguiente color
+    selectedColor = (selectedColor + 1) % 3;
+    delay(200); // Debounce delay
+  }
+
+  if (digitalRead(B4) == LOW) {
+    // B4 presionado, ajuste del brillo
+    brightness += 10; // Incremento del brillo per paso SUSTITUIR POR 10 EN VEZ DE 32 PARA PODER VER
+    if (brightness > 255) {
+      brightness = 0; // Reseteo al alcanzar el "valor" máximo
+    }
+    delay(200); // Debounce delay
+  }
+
+  // Actualización del LED seleccionado con el brillo actual
+  switch (selectedColor) {
+    case redChannel:
+      ledcWrite(redChannel, brightness);
+      ledcWrite(greenChannel, 0);
+      ledcWrite(blueChannel, 0);
+      break;
+    case greenChannel:
+      ledcWrite(redChannel, 0);
+      ledcWrite(greenChannel, brightness);
+      ledcWrite(blueChannel, 0);
+      break;
+    case blueChannel:
+      ledcWrite(redChannel, 0);
+      ledcWrite(greenChannel, 0);
+      ledcWrite(blueChannel, brightness);
+      break;
+  }
+}
